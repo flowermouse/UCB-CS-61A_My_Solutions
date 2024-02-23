@@ -1,182 +1,210 @@
+from operator import add, mul, mod
+
+square = lambda x: x * x
+
+identity = lambda x: x
+
+triple = lambda x: 3 * x
+
+increment = lambda x: x + 1
+
+
 HW_SOURCE_FILE=__file__
 
 
-def num_eights(x):
-    """Returns the number of times 8 appears as a digit of x.
+def product(n, term):
+    """Return the product of the first n terms in a sequence.
 
-    >>> num_eights(3)
-    0
-    >>> num_eights(8)
-    1
-    >>> num_eights(88888888)
-    8
-    >>> num_eights(2638)
-    1
-    >>> num_eights(86380)
-    2
-    >>> num_eights(12345)
-    0
-    >>> from construct_check import check
-    >>> # ban all assignment statements
-    >>> check(HW_SOURCE_FILE, 'num_eights',
-    ...       ['Assign', 'AugAssign'])
-    True
-    """
-    if x < 10:
-        if x == 8:
-            return 1
-        else:
-            return 0
-    else:
-        if x % 10 == 8:
-            return num_eights(x // 10) + 1
-        else:
-            return num_eights(x // 10)
+    n: a positive integer
+    term:  a function that takes one argument to produce the term
 
-
-def pingpong(n):
-    """Return the nth element of the ping-pong sequence.
-
-    >>> pingpong(8)
-    8
-    >>> pingpong(10)
+    >>> product(3, identity)  # 1 * 2 * 3
     6
-    >>> pingpong(15)
-    1
-    >>> pingpong(21)
-    -1
-    >>> pingpong(22)
-    -2
-    >>> pingpong(30)
-    -2
-    >>> pingpong(68)
-    0
-    >>> pingpong(69)
-    -1
-    >>> pingpong(80)
-    0
-    >>> pingpong(81)
-    1
-    >>> pingpong(82)
-    0
-    >>> pingpong(100)
-    -6
-    >>> from construct_check import check
-    >>> # ban assignment statements
-    >>> check(HW_SOURCE_FILE, 'pingpong', ['Assign', 'AugAssign'])
-    True
-    """
-    ''' 
-    if n == 1:
-        return 1
-     if n == 2:
-         return 2
-     else:
-         if (n - 1) % 8 == 0 or num_eights(n - 1) > 0:
-             return pingpong(n - 2)
-         else:
-             return 2 * pingpong(n - 1) - pingpong(n - 2)
-    '''
-    def helper(index, sum, adder):
-        if index == n:
-            return sum
-        elif index % 8 == 0 or num_eights(index) > 0:
-            return helper(index + 1, sum + adder * (-1), adder * (-1))
-        else:
-            return helper(index + 1, sum + adder, adder)
-    return helper(1, 1, 1)
-
-
-def missing_digits(n):
-    """Given a number a that is in sorted, increasing order,
-    return the number of missing digits in n. A missing digit is
-    a number between the first and last digit of a that is not in n.
-    >>> missing_digits(1248) # 3, 5, 6, 7
-    4
-    >>> missing_digits(1122) # No missing numbers
-    0
-    >>> missing_digits(123456) # No missing numbers
-    0
-    >>> missing_digits(3558) # 4, 6, 7
-    3
-    >>> missing_digits(35578) # 4, 6
-    2
-    >>> missing_digits(12456) # 3
-    1
-    >>> missing_digits(16789) # 2, 3, 4, 5
-    4
-    >>> missing_digits(19) # 2, 3, 4, 5, 6, 7, 8
-    7
-    >>> missing_digits(4) # No missing numbers between 4 and 4
-    0
-    >>> from construct_check import check
-    >>> # ban while or for loops
-    >>> check(HW_SOURCE_FILE, 'missing_digits', ['While', 'For'])
-    True
-    """
-    if n < 10:
-        return 0
-    else:
-        last = n % 10
-        second_last = n // 10 % 10
-        adder = max(last - second_last - 1, 0)
-        return adder + missing_digits(n // 10)
-
-
-def next_largest_coin(coin):
-    """Return the next coin. 
-    >>> next_largest_coin(1)
-    5
-    >>> next_largest_coin(5)
-    10
-    >>> next_largest_coin(10)
-    25
-    >>> next_largest_coin(2) # Other values return None
-    """
-    if coin == 1:
-        return 5
-    elif coin == 5:
-        return 10
-    elif coin == 10:
-        return 25
-
-
-def count_coins(total):
-    """Return the number of ways to make change for total using coins of value of 1, 5, 10, 25.
-    >>> count_coins(15)
-    6
-    >>> count_coins(10)
-    4
-    >>> count_coins(20)
-    9
-    >>> count_coins(100) # How many ways to make change for a dollar?
-    242
-    >>> from construct_check import check
-    >>> # ban iteration
-    >>> check(HW_SOURCE_FILE, 'count_coins', ['While', 'For'])                                          
-    True
-    """
-    def helper(num, max):
-        if num == total and max == None:
-            return 1
-        elif num > total or max == None:
-            return 0
-        else:
-            return helper(num, next_largest_coin(max)) + helper(num + max, max)     
-    return helper(0, 1)
-
-
-from operator import sub, mul
-
-def make_anonymous_factorial():
-    """Return the value of an expression that computes factorial.
-
-    >>> make_anonymous_factorial()(5)
+    >>> product(5, identity)  # 1 * 2 * 3 * 4 * 5
     120
+    >>> product(3, square)    # 1^2 * 2^2 * 3^2
+    36
+    >>> product(5, square)    # 1^2 * 2^2 * 3^2 * 4^2 * 5^2
+    14400
+    >>> product(3, increment) # (1+1) * (2+1) * (3+1)
+    24
+    >>> product(3, triple)    # 1*3 * 2*3 * 3*3
+    162
+    """
+    res = 1
+    for x in range(1, n + 1):
+        res *= term(x)
+    return res
+
+
+def accumulate(merger, start, n, term):
+    """Return the result of merging the first n terms in a sequence and start.
+    The terms to be merged are term(1), term(2), ..., term(n). merger is a
+    two-argument commutative function.
+
+    >>> accumulate(add, 0, 5, identity)  # 0 + 1 + 2 + 3 + 4 + 5
+    15
+    >>> accumulate(add, 11, 5, identity) # 11 + 1 + 2 + 3 + 4 + 5
+    26
+    >>> accumulate(add, 11, 0, identity) # 11
+    11
+    >>> accumulate(add, 11, 3, square)   # 11 + 1^2 + 2^2 + 3^2
+    25
+    >>> accumulate(mul, 2, 3, square)    # 2 * 1^2 * 2^2 * 3^2
+    72
+    >>> # 2 + (1^2 + 1) + (2^2 + 1) + (3^2 + 1)
+    >>> accumulate(lambda x, y: x + y + 1, 2, 3, square)
+    19
+    >>> # ((2 * 1^2 * 2) * 2^2 * 2) * 3^2 * 2
+    >>> accumulate(lambda x, y: 2 * x * y, 2, 3, square)
+    576
+    >>> accumulate(lambda x, y: (x + y) % 17, 19, 20, square)
+    16
+    """
+    res = start
+    for x in range(1, n + 1):
+        res = merger(res, term(x))
+    return res
+
+
+def summation_using_accumulate(n, term):
+    """Returns the sum: term(1) + ... + term(n), using accumulate.
+
+    >>> summation_using_accumulate(5, square)
+    55
+    >>> summation_using_accumulate(5, triple)
+    45
+    >>> # You aren't expected to understand the code of this test.
+    >>> # Check that the bodies of the functions are just return statements.
+    >>> # If this errors, make sure you have removed the "***YOUR CODE HERE***".
+    >>> import inspect, ast
+    >>> [type(x).__name__ for x in ast.parse(inspect.getsource(summation_using_accumulate)).body[0].body]
+    ['Expr', 'Return']
+    """
+    return accumulate(add, 0, n, term)
+
+
+def product_using_accumulate(n, term):
+    """Returns the product: term(1) * ... * term(n), using accumulate.
+
+    >>> product_using_accumulate(4, square)
+    576
+    >>> product_using_accumulate(6, triple)
+    524880
+    >>> # You aren't expected to understand the code of this test.
+    >>> # Check that the bodies of the functions are just return statements.
+    >>> # If this errors, make sure you have removed the "***YOUR CODE HERE***".
+    >>> import inspect, ast
+    >>> [type(x).__name__ for x in ast.parse(inspect.getsource(product_using_accumulate)).body[0].body]
+    ['Expr', 'Return']
+    """
+    return accumulate(mul, 1, n, term)
+
+
+def funception(func1, begin):
+    """ Takes in a function (func1) and a begin value.
+    Returns a function (func2) that will find the product of
+    func1 applied to the range of numbers from
+    begin (inclusive) to end (exclusive)
+
+    >>> def increment(num):
+    ...     return num + 1
+    >>> def double(num):
+    ...     return num * 2
+    >>> g1 = funception(increment, 0)
+    >>> g1(3)    # increment(0) * increment(1) * increment(2) = 1 * 2 * 3 = 6
+    6
+    >>> g1(0)    # Returns 1 because begin >= end
+    1
+    >>> g1(-1)   # Returns 1 because begin >= end
+    1
+    >>> g2 = funception(double, 1)
+    >>> g2(3)    # double(1) * double(2) = 2 * 4 = 8
+    8
+    >>> g2(4)    # double(1) * double(2) * double(3) = 2 * 4 * 6 = 48
+    48
+    >>> g3 = funception(increment, -3)
+    >>> g3(-1)   # increment(-3) * increment(-2) = -2 * -1 = 2
+    2
+    """
+    def func2(end):
+        res = 1
+        if begin >= end:
+            return 1
+        for x in range(begin, end):
+            res *= func1(x)
+        return res
+    return func2     
+
+
+def mul_by_num(num):
+    """Returns a function that takes one argument and returns num
+    times that argument.
+
+    >>> x = mul_by_num(5)
+    >>> y = mul_by_num(2)
+    >>> x(3)
+    15
+    >>> y(-4)
+    -8
+    """
+    return lambda x: x * num
+
+
+def add_results(f1, f2):
+    """
+    Return a function that takes in a single variable x, and returns
+    f1(x) + f2(x). You can assume the result of f1(x) and f2(x) can be
+    added together, and they both take in one argument.
+
+    >>> identity = lambda x: x
+    >>> square = lambda x: x**2
+    >>> a1 = add_results(identity, square) # x + x^2
+    >>> a1(4)
+    20
+    >>> a2 = add_results(a1, identity)     # (x + x^2) + x
+    >>> a2(4)
+    24
+    >>> a2(5)
+    35
+    >>> a3 = add_results(a1, a2)           # (x + x^2) + (x + x^2 + x)
+    >>> a3(4)
+    44
+    """
+    return lambda x: f1(x) + f2(x)
+
+
+def mod_maker():
+    """Return a two-argument function that performs the modulo operation and
+    returns True if the numbers are divisble, and the remainder otherwise.
+
+    >>> mod = mod_maker()
+    >>> mod(7, 2) # 7 % 2
+    1
+    >>> mod(4, 8) # 4 % 8
+    4
+    >>> mod(8,4) # 8 % 4
+    True
     >>> from construct_check import check
-    >>> # ban any assignments or recursion
-    >>> check(HW_SOURCE_FILE, 'make_anonymous_factorial', ['Assign', 'AugAssign', 'FunctionDef', 'Recursion'])
+    >>> check(HW_SOURCE_FILE, 'mod_maker', ['If', 'IfExp']) # no if / if-else statements
     True
     """
-    return 'YOUR_EXPRESSION_HERE'
+    return lambda x, y: mod(x, y) or True 
+
+
+def lambda_math_syntax_check():
+    """Checks that definitions of summation_using_accumulate and
+    produce_using_accumulate are each a single return statement.
+
+    >>> # You aren't expected to understand the code of this test.
+    >>> # Check that the bodies of the functions are just return statements.
+    >>> # If this errors, make sure you have removed the "***YOUR CODE HERE***".
+    >>> import inspect, ast
+    >>> [type(x).__name__ for x in ast.parse(inspect.getsource(mul_by_num)).body[0].body]
+    ['Expr', 'Return']
+    >>> [type(x).__name__ for x in ast.parse(inspect.getsource(add_results)).body[0].body]
+    ['Expr', 'Return']
+    >>> [type(x).__name__ for x in ast.parse(inspect.getsource(mod_maker)).body[0].body]
+    ['Expr', 'Return']
+    """
 
